@@ -1,0 +1,70 @@
+# Workflow-node example, not a bundled video server. Supply your worker explicitly.
+id = "comfyui-wan-animate2-rgba"
+name = "Wan-Animate2 workflow node / RGBA WebM"
+enabled = false
+
+[control]
+version = 1
+interpreter = ".venv/bin/python"
+adapter = "mode.py"
+startup_timeout_seconds = 900
+check_timeout_seconds = 300
+probe_timeout_seconds = 20
+
+[worker]
+script = "app/resource_api.py"
+config = "private-resource.json"
+token_file = "secrets/api-token"
+
+[api]
+host = "0.0.0.0"
+port = 8191
+comfy_internal_host = "127.0.0.1"
+comfy_internal_port = 8192
+# Illustrative contract: adapt to the resource server you actually deploy.
+protocol = "media-resource-v1"
+capability = "wan-animate2-semantic720-rgb-v1"
+profile_version = "v1"
+
+[workflow]
+input = "RGBA character PNG + RGB driving video + appearance/motion text"
+quantization = "Wan-Animate2 distill INT8 ConvRot"
+gpu_roles = ["text / vision / VAE, then RGB super-resolution and alpha", "DiT sampling"]
+parallelism = "component placement and sequential phases, no TP/PP collective"
+parallel_requests = 1
+width = 352
+height = 624
+latent_frames = 81
+rgb_frames = 80
+fps = 16
+steps = 10
+sampler = "lcm"
+scheduler = "simple"
+cfg = 1.0
+shift = 5.0
+output_width = 720
+output_height = 1280
+output_frames = 120
+output_fps = 24
+output_format = "VP9 WebM with semantic temporal alpha"
+
+[models]
+required_files = [
+  "/srv/models/Wan/wan_animate_2_distill_int8_convrot.safetensors",
+  "/srv/models/Wan/umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+  "/srv/models/Wan/clip_vision_h.safetensors",
+  "/srv/models/Wan/Wan2_1_VAE_bf16.safetensors",
+  "/srv/models/Matting/BiRefNet_HR/model.safetensors",
+  "/srv/models/Matting/matanyone2.pth",
+  "/srv/models/SuperResolution/realesr-animevideov3.pth",
+  "/srv/models/TorchHub/resnet18-5c106cde.pth",
+  "/srv/models/TorchHub/resnet50-19c8e357.pth",
+]
+
+[reference_versions]
+python = "3.12.16"
+torch = "2.13.0+cu130"
+comfyui = "0.37.0"
+comfyui_commit = "73c9bad4d21e7addbe1d13bc92eee0f1431b017d"
+video_helper_suite_commit = "4d907bee61e92c2e65af3bd6383a4e4d356126d1"
+matanyone2_commit = "0079197acd6d16a741f71558809c06c586c579e0"

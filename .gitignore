@@ -1,0 +1,35 @@
+# Real deployment belongs to the operator, not the public repository.
+/machine.toml
+/modes/
+/.runtime/
+/.local/
+/controller-version.json
+/docs/controller-validation.md
+/tests/validate_wan_interrupt.py
+
+# Credentials, application checkouts, runtimes, caches and generated artifacts.
+.env
+.env.*
+!.env.example
+**/.venv/
+**/__pycache__/
+*.py[cod]
+**/cache/
+**/app/
+**/engine/
+**/assets/
+**/build/
+**/dist/
+*.egg-info/
+*.log
+*.gguf
+*.safetensors
+*.pt
+*.pth
+*.bin
+*.pem
+*.key
+private-*.json
+client-config.json
+.coverage
+.pytest_cache/

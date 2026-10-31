@@ -1,0 +1,24 @@
+# Copy to machine.toml and replace BOTH GPU UUIDs and the filesystem UUID.
+schema_version = 1
+
+[storage]
+mountpoint = "/srv/models"
+filesystem_uuid = "REPLACE_WITH_MODEL_FILESYSTEM_UUID"
+
+[gpu]
+uuids = ["GPU-REPLACE-FIRST", "GPU-REPLACE-SECOND"]
+# Example idle baseline: 15 MiB/card on two RTX PRO 4000 Blackwell 24 GB GPUs.
+# Adjust for your own desktop, driver and display workload.
+released_memory_max_mib = 256
+release_timeout_seconds = 45
+
+[lifecycle]
+stop_timeout_seconds = 5
+
+[aliases]
+"1" = "vllm-qwen36-35b-pp2"
+vllm = "vllm-qwen36-35b-pp2"
+"2" = "strata-qwen38-flash-next"
+strata = "strata-qwen38-flash-next"
+"3" = "comfyui-wan-animate2-rgba"
+wan = "comfyui-wan-animate2-rgba"

@@ -1,0 +1,51 @@
+# Sanitized recipe; edit paths, prepare explicitly, then set enabled = true.
+id = "vllm-qwen36-35b-pp2"
+enabled = false
+name = "Qwen3.6-35B-A3B FP8 · PP=2 · text"
+backend = "vllm"
+
+[model]
+path = "/srv/models/Qwen/Qwen3.6-35B-A3B-FP8"
+expected_model_type = "qwen3_5_moe"
+
+# Logical CUDA device order comes from the operator's machine.toml.
+
+[environment]
+# Avoid the peer-to-peer transport that hung during this host's first NCCL init.
+NCCL_P2P_DISABLE = "1"
+VLLM_USE_DEEP_GEMM = "0"
+VLLM_MOE_USE_DEEP_GEMM = "0"
+OMP_NUM_THREADS = "1"
+
+[vllm]
+host = "0.0.0.0"
+port = 8000
+served_model_name = "qwen3.6-35b-a3b"
+pipeline_parallel_size = 2
+tensor_parallel_size = 1
+distributed_executor_backend = "mp"
+dtype = "bfloat16"
+quantization = "fp8"
+load_format = "safetensors"
+safetensors_load_strategy = "eager"
+gpu_memory_utilization = 0.90
+max_model_len = 65536
+max_num_seqs = 10
+max_num_batched_tokens = 4096
+# The checkpoint has no calibrated KV scales; use BF16 KV for this baseline.
+kv_cache_dtype = "auto"
+language_model_only = true
+default_chat_template_kwargs = '{"enable_thinking": false}'
+reasoning_parser = "qwen3"
+enable_auto_tool_choice = true
+tool_call_parser = "qwen3_coder"
+disable_custom_all_reduce = true
+moe_backend = "triton"
+
+[control]
+version = 1
+interpreter = ".venv/bin/python"
+adapter = "mode.py"
+startup_timeout_seconds = 900
+check_timeout_seconds = 300
+probe_timeout_seconds = 35

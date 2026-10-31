@@ -1,0 +1,11 @@
+id = "example-mode"
+name = "Describe this integration"
+enabled = false
+
+[control]
+version = 1
+interpreter = ".venv/bin/python"
+adapter = "mode.py"
+startup_timeout_seconds = 900
+check_timeout_seconds = 300
+probe_timeout_seconds = 35

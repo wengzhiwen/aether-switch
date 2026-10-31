@@ -1,0 +1,76 @@
+# Sanitized recipe; edit paths, prepare explicitly, then set enabled = true.
+schema_version = 1
+id = "strata-qwen38-flash-next"
+name = "Strata / Qwen3.8-Flash-Next IQ3_S"
+enabled = false
+
+[engine]
+repository = "https://github.com/Niko1221/Strata"
+release = "v0.2.8"
+source_commit = "870aedd9e1ebe1c91f94da93b59af17729f6c5c0"
+version = "0.1.54"
+package_build_id = "8c1aea4bca1b+cuda13.0"
+executable = "engine/strata"
+python = ".venv/bin/python"
+python_version = "3.12.16"
+
+[model]
+family = "qwen"
+name = "Qwen3.8-Flash-Next"
+provider = "ISTA-DASLab"
+quantization = "GSQ-RCO IQ3_S (mixed tensor types)"
+source_revision = "1868010e27505d4b8cc15970cdcc4dd76005d7de"
+gguf = "/srv/models/Strata/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf"
+shard2 = "/srv/models/Strata/IQ3_S/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf"
+mmproj = "/srv/models/Strata/mmproj-Qwen3.8-Flash-Next-BF16.gguf"
+pack = "/srv/models/Strata/packs/iq3_s"
+mtp = "/srv/models/Strata/mtp"
+mtp_revision = "de4b8e4d43b917e7706784d8bb445c9af86a3540"
+mtp_enabled = true
+draft_vocab = "cjk"
+
+[gpu]
+parallelism = "pipeline layer split; not tensor parallel"
+devices = [0, 1]
+roles = ["helper", "main"]
+layer_split = "24"
+context_tokens = 32768
+parallel_requests = 4
+vram_reserve_mib = 2048
+vram_reserve_later_mib = 2560
+
+[environment]
+# Preserve the model's complete routed-expert sum.
+STRATA_ROUTE_TAIL_SKIP = "0"
+
+[inference]
+kv = "int8"
+ple_io = "direct"
+expert_cache = "auto"
+prefill = "auto"
+speculative_window = 4
+speculative_min_probability = 0.5
+batch_mtp = false
+batch_groups = "auto"
+trim_stage_weights = true
+conversation_cache_slots = 8
+
+[vision]
+enabled = false
+gpu = true
+max_tokens = 1024
+
+[api]
+host = "0.0.0.0"
+port = 8080
+model_name = "qwen3.8-flash-next-iq3_s"
+authentication = "none; all IPv4 interfaces"
+readiness = "health.loaded=true; expected model and context; images=false; serving=4; api_key=false"
+
+[control]
+version = 1
+interpreter = ".venv/bin/python"
+adapter = "mode.py"
+startup_timeout_seconds = 900
+check_timeout_seconds = 300
+probe_timeout_seconds = 35
