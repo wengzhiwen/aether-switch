@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 — Unreleased
+## 0.2.0 — 2026-11-01
 
 - Docker modes: `[control] runtime = "docker"` runs a foreground labeled container through the same launch grant; stopping stops the unit, removes the labeled container and verifies release. Container-scope GPU processes are managed attribution; declared `listen_ports()` authorize port reuse by an old docker mode.
 - Unified-memory GPU support: `[N/A]` per-GPU accounting falls back to compute-app allocation sums plus operator-declared `memory_total_mib`.
