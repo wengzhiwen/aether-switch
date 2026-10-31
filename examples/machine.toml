@@ -7,6 +7,9 @@ filesystem_uuid = "REPLACE_WITH_MODEL_FILESYSTEM_UUID"
 
 [gpu]
 uuids = ["GPU-REPLACE-FIRST", "GPU-REPLACE-SECOND"]
+# Unified-memory devices (for example GB10) report [N/A] per-GPU accounting;
+# the controller then sums compute-app allocations and uses this declared capacity.
+# memory_total_mib = 131072
 # Example idle baseline: 15 MiB/card on two RTX PRO 4000 Blackwell 24 GB GPUs.
 # Adjust for your own desktop, driver and display workload.
 released_memory_max_mib = 256

@@ -4,6 +4,8 @@ enabled = false
 
 [control]
 version = 1
+# "systemd" (default) or "docker" for a foreground containerized service.
+# runtime = "docker"
 interpreter = ".venv/bin/python"
 adapter = "mode.py"
 startup_timeout_seconds = 900

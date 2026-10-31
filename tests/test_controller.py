@@ -37,6 +37,24 @@ def make_project(directory):
     return project
 
 
+def add_docker_mode(project, identifier="docker-test"):
+    mode = project / "modes" / identifier
+    mode.mkdir()
+    (mode / "mode.toml").write_text(
+        f'id = "{identifier}"\nname = "docker test"\nenabled = true\n\n'
+        "[control]\nversion = 1\nruntime = \"docker\"\ninterpreter = \".venv/bin/python\"\nadapter = \"mode.py\"\n")
+    (mode / "mode.py").write_text(
+        "def check():\n    return {}\n\n\ndef listen_ports():\n    return [('127.0.0.1', 18300)]\n\n\n"
+        "def build_launch():\n    raise NotImplementedError\n\n\ndef probe():\n"
+        "    return {'healthy': True, 'accepting_requests': True, 'busy': False}\n")
+    python = mode / ".venv/bin/python"
+    python.parent.mkdir(parents=True)
+    python.symlink_to(sys.executable)
+    for action in ["start", "status", "stop", "force-stop", "launch"]:
+        (mode / (action + ".sh")).symlink_to("../../scripts/mode-entry.sh")
+    return mode
+
+
 class ControllerTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -193,6 +211,119 @@ class ControllerTests(unittest.TestCase):
             listener.listen()
             with self.assertRaisesRegex(ManagerError, "before stopping old mode"):
                 self.controller.preflight_ports([("127.0.0.1", listener.getsockname()[1])])
+
+
+class TimespanAndUnifiedMemoryTests(ControllerTests):
+    def test_verbose_timespan_still_proves_unit_ownership(self):
+        c = self.controller
+        c.machine["lifecycle"]["stop_timeout_seconds"] = 90
+        props = self.live(self.a)
+        props["TimeoutStopUSec"] = "1min 30s"
+        c.ownership(self.a, props)  # must not raise
+        props["TimeoutStopUSec"] = "5s"
+        with self.assertRaisesRegex(ManagerError, "ownership"):
+            c.ownership(self.a, props)
+
+    def test_na_memory_fields_fall_back_to_compute_app_sums(self):
+        c = self.controller
+        c.machine["gpu"]["uuids"] = ["GPU-X"]
+        c.machine["gpu"]["memory_total_mib"] = 131072
+        c.compute = Mock(return_value=[{"gpu": "GPU-X", "used_mib": 400}, {"gpu": "GPU-X", "used_mib": 100},
+                                       {"gpu": "GPU-OTHER", "used_mib": 50}])
+        with patch("server_manager.core.run") as nvidia:
+            nvidia.return_value = Mock(stdout="GPU-X, [N/A], [N/A]\n")
+            result = c.devices()
+        self.assertEqual(result["GPU-X"]["memory_used_mib"], 500)
+        self.assertEqual(result["GPU-X"]["memory_total_mib"], 131072)
+        self.assertEqual(result["GPU-X"]["memory_source"], "compute-apps")
+
+
+class DockerModeTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.project = make_project(self.temp.name)
+        add_docker_mode(self.project)
+        self.controller = Controller(self.project, backend=Mock())
+        self.m = self.controller.mode("docker-test")
+        self.m.runtime = self.controller.state / "m"
+
+    def live(self, mode):
+        return {"Id": mode.unit, "LoadState": "loaded", "ActiveState": "active", "SubState": "running",
+                "Transient": "yes", "KillMode": "control-group", "Restart": "no", "TimeoutStopUSec": "5s",
+                "ExecStart": f"{{ path={mode.directory / 'launch.sh'} ; argv[]=ignored ; }}",
+                "InvocationID": "original", "MainPID": "0",
+                "ControlGroup": f"/user.slice/user-{os.getuid()}.slice/user@{os.getuid()}.service/app.slice/{mode.unit}"}
+
+    def running_container(self):
+        return {"id": "abc123def456", "running": True, "label_ok": True,
+                "cgroup": "/system.slice/docker-abc123def456.scope"}
+
+    def test_docker_stop_removes_container_and_verifies_release(self):
+        c = self.controller
+        c.backend.show.side_effect = [self.live(self.m), {"ActiveState": "failed", "Result": "signal", "ExecMainStatus": "137"}]
+        c.backend.docker_state.side_effect = [self.running_container(), None, None]
+        c.compute = Mock(return_value=[])
+        with patch("server_manager.core.cgroup_pids", return_value=[]), patch("server_manager.core.cgroup_empty", return_value=True):
+            result = c.stop_one(self.m)
+        c.backend.stop.assert_called_once_with(self.m, False)
+        c.backend.docker_remove.assert_called_once_with(self.m)
+        self.assertTrue(result["container_removed"])
+        self.assertEqual(result["exit_status"], "137")
+
+    def test_foreign_container_is_never_touched(self):
+        c = self.controller
+        c.backend.show.return_value = self.live(self.m)
+        foreign = self.running_container()
+        foreign["label_ok"] = False
+        c.backend.docker_state.return_value = foreign
+        with self.assertRaisesRegex(ManagerError, "Foreign container"):
+            c.stop_one(self.m)
+        c.backend.docker_remove.assert_not_called()
+        c.backend.stop.assert_not_called()
+
+    def test_stale_container_without_unit_is_cleaned(self):
+        c = self.controller
+        c.backend.show.return_value = {"LoadState": "not-found", "ActiveState": "inactive"}
+        c.backend.docker_state.side_effect = [self.running_container(), None]
+        c.compute = Mock(return_value=[])
+        result = c.stop_one(self.m)
+        c.backend.stop.assert_not_called()
+        c.backend.docker_remove.assert_called_once_with(self.m)
+        self.assertTrue(result["stopped"])
+        self.assertNotIn("already_stopped", result)
+
+    def test_declared_port_of_old_docker_mode_is_reusable(self):
+        c = self.controller
+        with socket.socket() as listener:
+            listener.bind(("127.0.0.1", 0))
+            listener.listen()
+            port = listener.getsockname()[1]
+            c.inventory = Mock(return_value=[(self.m, self.live(self.m))])
+            c.adapter = Mock(return_value={"listen_ports": [("127.0.0.1", port)]})
+            c.preflight_ports([("127.0.0.1", port)])  # owned by the identified old docker mode
+            c.adapter = Mock(return_value={"listen_ports": [("127.0.0.1", port + 1)]})
+            with self.assertRaisesRegex(ManagerError, "before stopping old mode"):
+                c.preflight_ports([("127.0.0.1", port)])
+
+    def test_container_compute_is_managed_only_with_matching_scope(self):
+        c = self.controller
+        live = [(self.m, self.live(self.m))]
+        c.backend.docker_state.return_value = self.running_container()
+        c.compute = Mock(return_value=[{"gpu": "GPU-X", "pid": 9, "used_mib": 1, "name": "vllm",
+                                        "cgroup": "/system.slice/docker-abc123def456.scope/vllm"}])
+        c.assert_no_unknown_compute(live)
+        c.compute = Mock(return_value=[{"gpu": "GPU-X", "pid": 9, "used_mib": 1, "name": "other",
+                                        "cgroup": "/system.slice/docker-OTHER.scope/worker"}])
+        with self.assertRaisesRegex(ManagerError, "Unmanaged GPU"):
+            c.assert_no_unknown_compute(live)
+
+    def test_internal_run_refuses_stale_container(self):
+        c = self.controller
+        c.backend.show.return_value = self.live(self.m)
+        c.backend.docker_state.return_value = self.running_container()
+        with self.assertRaisesRegex(ManagerError, "Stale container"):
+            c.internal_run(self.m)
 
 
 class AdapterTests(unittest.TestCase):

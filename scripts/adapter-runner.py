@@ -39,15 +39,18 @@ def main():
         print("server_mgr: exec prepared mode recipe", flush=True)
         os.execve(argv[0], argv, env)
     else:
-        result = adapter.check() if action == "check" else adapter.probe()
-        if not isinstance(result, dict):
-            raise ValueError("adapter hooks must return objects")
-        if action == "check":
-            result["listen_ports"] = adapter.listen_ports()
-        if action == "probe":
-            for key in ("healthy", "accepting_requests", "busy"):
-                if type(result.get(key)) is not bool:
-                    raise ValueError("probe must return boolean " + key)
+        if action == "ports":
+            result = {"listen_ports": adapter.listen_ports()}
+        else:
+            result = adapter.check() if action == "check" else adapter.probe()
+            if not isinstance(result, dict):
+                raise ValueError("adapter hooks must return objects")
+            if action == "check":
+                result["listen_ports"] = adapter.listen_ports()
+            if action == "probe":
+                for key in ("healthy", "accepting_requests", "busy"):
+                    if type(result.get(key)) is not bool:
+                        raise ValueError("probe must return boolean " + key)
         print(json.dumps(result, ensure_ascii=False))
 
 

@@ -50,6 +50,21 @@ check_timeout_seconds = 300
 probe_timeout_seconds = 35
 ```
 
+## Docker modes
+
+A mode may declare `[control] runtime = "docker"` when its service runs containerized. The adapter contract is unchanged: `build_launch()` returns a foreground `docker run --rm --name server-mgr-<mode-id> --label server_mgr.mode=<mode-id> …` argv, so container stdout streams into the unit log and the unit lifecycle follows the client. The mode-local interpreter still runs the adapter hooks on the host.
+
+Differences from native modes, all in the controller:
+
+- The container name and label are the ownership proof for the container; a foreign container with the mode's name is reported, never removed.
+- Stopping stops the unit (TERM reaches the container through the client), then removes the labeled container (`docker rm -f`) and verifies the container is gone, original identities exited and GPU release exactly like a native mode. A stale labeled container is cleaned even when its unit already disappeared.
+- Container processes live in a `system.slice/docker-<id>.scope` cgroup outside the user unit. GPU processes in that scope count as managed only while the identified mode is live, and a container that outlives its unit surfaces as a status conflict.
+- Its listeners are root-owned, so inode-level port attribution is impossible from a user controller. Preflight instead reuses the ports the old docker mode itself declares through `listen_ports()`; unknown listeners still block a switch.
+
+## Unified-memory GPUs
+
+Some devices (for example GB10-class unified memory) answer `[N/A]` for per-GPU memory accounting. When that happens the controller sums `nvidia-smi --query-compute-apps` allocations per GPU and uses the operator-declared `[gpu] memory_total_mib` from `machine.toml` as the capacity; release checks then mean "no compute processes hold allocations". `TimeoutStopSec` unit properties are compared as parsed timespans, not strings, so distributions that render `90s` as `1min 30s` verify correctly.
+
 Machine-wide stop/release policy comes from `machine.toml`. The existing internal unit prefix `server-mgr-<mode-id>.service` and `SERVER_MGR_LAUNCH_TOKEN` are retained for compatibility; public branding does not require renaming running units.
 
 ## Adapter hooks
