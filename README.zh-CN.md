@@ -63,4 +63,4 @@ Wan 样例展示适配器和接口契约，需自行提供资源 API、工作器
 
 测试命令：`python3 -B -m unittest discover -s tests -v`。测试不需要本机配置、GPU、模型或运行中的 systemd 服务。公开前运行 `python3 -B scripts/audit-public.py` 检查 Git 暂存内容。
 
-更多内容：[中控与适配器接口](docs/controller.md)、[部署经验](docs/deployment-notes.md)、[Strata：Linux + NVIDIA 双卡部署实战](docs/strata-linux-nvidia-dual-gpu.md)、[测试范围](docs/testing.md)、[贡献说明](CONTRIBUTING.md)。
+更多内容：[中控与适配器接口](docs/controller.md)、[部署经验](docs/deployment-notes.md)、[Strata：Linux + NVIDIA 双卡部署实战](docs/strata-linux-nvidia-dual-gpu.md)、[Strata：Linux + GB10 统一内存部署实战](docs/strata-linux-gb10-unified-memory.md)、[测试范围](docs/testing.md)、[贡献说明](CONTRIBUTING.md)。

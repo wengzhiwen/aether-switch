@@ -26,6 +26,8 @@ Strata's trimming flag requires explicit layer splitting. Validate resolved flag
 
 For the version-specific Strata recipe, preparation steps, tuning comparisons and client checks, see the standalone [Linux + dual NVIDIA GPU field guide (中文)](strata-linux-nvidia-dual-gpu.md). Its measurements summarize historical inference runs; no raw operator evidence is published and no new GPU validation is implied. Post-load free VRAM is only a snapshot: sample real prefill/concurrent tasks before deciding memory headroom. Compare foreground latency alongside aggregate throughput when choosing concurrency.
 
+For the single-GPU unified-memory (GB10-class) variant — the aarch64 engine matrix, the mmap/page-cache expert layout versus the dual-GPU RAM arena, PLE-in-RAM versus SSD per pack type, and the 8-slot multi-agent profile — see the standalone [Linux + GB10 unified-memory field guide (中文)](strata-linux-gb10-unified-memory.md). Same sanitization rules apply: historical summaries only, no operator evidence, and per-release platform checks instead of a blanket "no ARM build" conclusion.
+
 ## Lifecycle and application status
 
 An API can remain idle with GPU memory at driver baseline and still own the mode. A workflow resource can report a documented 503/ready=false for busy while remaining healthy. Match that specific protocol, authenticate capabilities and verify process identity when the application exposes it; generic 503 is not success.

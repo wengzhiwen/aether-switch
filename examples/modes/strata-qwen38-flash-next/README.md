@@ -4,6 +4,8 @@ This adapter demonstrates a third-party engine with a richer preparation boundar
 
 The standalone [Linux + dual NVIDIA GPU deployment guide (中文)](../../../docs/strata-linux-nvidia-dual-gpu.md) covers dependency/model preparation, parameter choices, historical benchmark summaries, memory diagnosis and Claude Code integration. It contains sanitized experience, not a new GPU acceptance of this public example.
 
+The single-GPU unified-memory variant is documented separately in the [Linux + GB10 unified-memory deployment guide (中文)](../../../docs/strata-linux-gb10-unified-memory.md): it reuses this example's adapter contract with a different gpu/inference recipe (no layer split, mmap experts, PLE in RAM, 8 serving slots) and platform-pinned aarch64 engine checks.
+
 ## Versions and preparation
 
 - [Strata v0.2.8](https://github.com/Niko1221/Strata/releases/tag/v0.2.8), source commit `870aedd9e1ebe1c91f94da93b59af17729f6c5c0`.

@@ -4,6 +4,8 @@
 
 - Add a standalone sanitized Strata deployment guide for Linux and two NVIDIA GPUs: pinned dependencies and model preparation, pipeline/MTP choices, historical benchmark methods and summaries, memory diagnostics, Claude Code integration and the shared lifecycle boundary.
 - Link the guide from both repository READMEs, deployment lessons and the disabled Strata example. No operator deployment, raw runtime evidence or application binaries are published.
+- Add the companion sanitized Strata guide for Linux on GB10-class unified memory: the per-release aarch64 engine matrix, single-GPU recipe deltas (mmap experts, PLE table in RAM, 32K prefill chunks, MTP q4/hnorm, 8 serving slots), unified-memory accounting with the controller's compute-app fallback, adapter pitfalls and historical acceptance summaries.
+- Link the GB10 guide from both repository READMEs, deployment lessons and the disabled Strata example; it documents the same public example's adapter contract with a machine-specific recipe, not a new GPU validation.
 
 ## 0.2.0 — 2026-11-01
 
