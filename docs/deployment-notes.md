@@ -24,6 +24,8 @@ Check package hash, native build ID, source commit, architecture support, driver
 
 Strata's trimming flag requires explicit layer splitting. Validate resolved flag combinations before stopping a current mode. Confirm effective concurrency from the running engine, not just a requested CLI number. CPU expert arenas, GPU hot-expert caches and SSD-backed components can intentionally coexist; measure MemAvailable, swap growth, OOM and driver errors before interpreting a memory graph as a crash.
 
+For the version-specific Strata recipe, preparation steps, tuning comparisons and client checks, see the standalone [Linux + dual NVIDIA GPU field guide (中文)](strata-linux-nvidia-dual-gpu.md). Its measurements summarize historical inference runs; no raw operator evidence is published and no new GPU validation is implied. Post-load free VRAM is only a snapshot: sample real prefill/concurrent tasks before deciding memory headroom. Compare foreground latency alongside aggregate throughput when choosing concurrency.
+
 ## Lifecycle and application status
 
 An API can remain idle with GPU memory at driver baseline and still own the mode. A workflow resource can report a documented 503/ready=false for busy while remaining healthy. Match that specific protocol, authenticate capabilities and verify process identity when the application exposes it; generic 503 is not success.

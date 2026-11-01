@@ -2,6 +2,8 @@
 
 This adapter demonstrates a third-party engine with a richer preparation boundary: native binaries and shared libraries, a local GGUF/native pack, MTP artifacts, an application server and a generated runtime configuration.
 
+The standalone [Linux + dual NVIDIA GPU deployment guide (中文)](../../../docs/strata-linux-nvidia-dual-gpu.md) covers dependency/model preparation, parameter choices, historical benchmark summaries, memory diagnosis and Claude Code integration. It contains sanitized experience, not a new GPU acceptance of this public example.
+
 ## Versions and preparation
 
 - [Strata v0.2.8](https://github.com/Niko1221/Strata/releases/tag/v0.2.8), source commit `870aedd9e1ebe1c91f94da93b59af17729f6c5c0`.

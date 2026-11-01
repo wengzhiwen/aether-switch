@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add a standalone sanitized Strata deployment guide for Linux and two NVIDIA GPUs: pinned dependencies and model preparation, pipeline/MTP choices, historical benchmark methods and summaries, memory diagnostics, Claude Code integration and the shared lifecycle boundary.
+- Link the guide from both repository READMEs, deployment lessons and the disabled Strata example. No operator deployment, raw runtime evidence or application binaries are published.
+
 ## 0.2.0 — 2026-11-01
 
 - Docker modes: `[control] runtime = "docker"` runs a foreground labeled container through the same launch grant; stopping stops the unit, removes the labeled container and verifies release. Container-scope GPU processes are managed attribution; declared `listen_ports()` authorize port reuse by an old docker mode.

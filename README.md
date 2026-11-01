@@ -93,7 +93,7 @@ tests/                             CPU-only tests with temporary fixtures
 machine.toml  modes/  .runtime/     Local operator data; ignored by Git
 ```
 
-See [architecture and adapter contract](docs/controller.md), [deployment lessons](docs/deployment-notes.md), [testing and limits](docs/testing.md), and [contributing](CONTRIBUTING.md).
+See [architecture and adapter contract](docs/controller.md), [deployment lessons](docs/deployment-notes.md), the [Strata on Linux + dual NVIDIA GPUs field guide (中文)](docs/strata-linux-nvidia-dual-gpu.md), [testing and limits](docs/testing.md), and [contributing](CONTRIBUTING.md).
 
 ```bash
 python3 -B -m unittest discover -s tests -v
